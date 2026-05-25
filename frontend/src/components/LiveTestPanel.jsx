@@ -5,28 +5,13 @@ const ROW_BG = { pass: "bg-green-50", soft_fail: "bg-yellow-50", hard_fail: "bg-
 const BADGE = { pass: "bg-green-100 text-green-800", soft_fail: "bg-yellow-100 text-yellow-800", hard_fail: "bg-red-100 text-red-800" };
 const BADGE_LABEL = { pass: "Pass", soft_fail: "Soft Fail", hard_fail: "Hard Fail" };
 
-const DEFAULT = {
-  pan: {
-    number: "ABCPK1234D",
-    name: "P. Kumar",
-    dob: "2004 arpil 6th",
-    gender: "M",
-    father_name: "R. Kumar",
-  },
-  aadhaar: {
-    last4: "1234",
-    name: "Prashant Kumar",
-    dob: "2004/04/06",
-    gender: "M",
-    father_name: "Ramesh Kumar",
-  },
-  bureau: {
-    name: "Prashant Kumar",
-    dob: "2004-04-06",
-    pan_linked: "ABCPK1234D",
-    aadhaar_last4: "1234",
-  },
+const DEFAULT_FIELDS = {
+  pan: { number: "ABCPK1234D", name: "P. Kumar", dob: "2004 arpil 6th", gender: "M", father_name: "R. Kumar" },
+  aadhaar: { last4: "1234", name: "Prashant Kumar", dob: "2004/04/06", gender: "M", father_name: "Ramesh Kumar" },
+  bureau: { name: "Prashant Kumar", dob: "2004-04-06", pan_linked: "ABCPK1234D", aadhaar_last4: "1234" },
 };
+
+const DEFAULT_THRESHOLDS = { pass: 85, soft: 55, leniency: true };
 
 function InputField({ label, value, onChange, placeholder }) {
   return (
@@ -43,17 +28,27 @@ function InputField({ label, value, onChange, placeholder }) {
   );
 }
 
+function previewResult(score, pass_t, soft_t) {
+  if (score >= pass_t) return { label: "✅ PASS", cls: "text-green-600" };
+  if (score >= soft_t) return { label: "⚠️ SOFT FAIL", cls: "text-yellow-600" };
+  return { label: "🚫 HARD FAIL", cls: "text-red-600" };
+}
+
 export default function LiveTestPanel() {
-  const [fields, setFields] = useState(DEFAULT);
+  const [fields, setFields] = useState(DEFAULT_FIELDS);
+  const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
+  const [thresholdOpen, setThresholdOpen] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   function setField(section, key, value) {
-    setFields((prev) => ({
-      ...prev,
-      [section]: { ...prev[section], [key]: value },
-    }));
+    setFields((prev) => ({ ...prev, [section]: { ...prev[section], [key]: value } }));
   }
+
+  const isCustomThreshold =
+    thresholds.pass !== DEFAULT_THRESHOLDS.pass ||
+    thresholds.soft !== DEFAULT_THRESHOLDS.soft ||
+    thresholds.leniency !== DEFAULT_THRESHOLDS.leniency;
 
   async function handleRun() {
     setLoading(true);
@@ -62,10 +57,14 @@ export default function LiveTestPanel() {
       const res = await fetch("/api/verify-live", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(fields),
+        body: JSON.stringify({
+          ...fields,
+          pass_threshold: thresholds.pass,
+          soft_threshold: thresholds.soft,
+          initial_leniency: thresholds.leniency,
+        }),
       });
-      const data = await res.json();
-      setResult(data);
+      setResult(await res.json());
     } catch (err) {
       console.error("Live test failed:", err);
     } finally {
@@ -73,11 +72,11 @@ export default function LiveTestPanel() {
     }
   }
 
-  const dobCheck = result?.checks?.find((c) => c.check === "DOB (PAN vs Aadhaar)");
+  const dobCheck = result?.checks?.find((c) => c.check?.includes("Date of Birth"));
+  const PREVIEW_SCORES = [90, 70, 40];
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 space-y-5">
-      {/* Header */}
       <div>
         <h2 className="text-base font-bold text-gray-800">🧪 Live Format Tester</h2>
         <p className="text-xs text-gray-500 mt-0.5">
@@ -85,39 +84,137 @@ export default function LiveTestPanel() {
         </p>
       </div>
 
+      {/* Threshold controls */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setThresholdOpen((o) => !o)}
+          className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-colors ${
+            isCustomThreshold ? "bg-yellow-50 text-yellow-800" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <span>⚙️ Fuzzy Matching Thresholds{isCustomThreshold ? " (custom)" : ""}</span>
+          <span>{thresholdOpen ? "▲" : "▼"}</span>
+        </button>
+
+        {thresholdOpen && (
+          <div className="px-5 py-4 space-y-4 border-t border-gray-200">
+            {/* Pass threshold */}
+            <div>
+              <div className="flex justify-between mb-1">
+                <label className="text-xs font-semibold text-gray-700">
+                  Pass Threshold (currently: {thresholds.pass}%)
+                </label>
+                <span className="text-xs text-gray-400">Score above this = PASS</span>
+              </div>
+              <input
+                type="range" min={70} max={95} step={5}
+                value={thresholds.pass}
+                onChange={(e) => setThresholds((t) => ({ ...t, pass: Number(e.target.value) }))}
+                className="w-full accent-green-500"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+                <span>70%</span><span>95%</span>
+              </div>
+            </div>
+
+            {/* Soft fail threshold */}
+            <div>
+              <div className="flex justify-between mb-1">
+                <label className="text-xs font-semibold text-gray-700">
+                  Soft Fail Threshold (currently: {thresholds.soft}%)
+                </label>
+                <span className="text-xs text-gray-400">Between this and pass = SOFT FAIL</span>
+              </div>
+              <input
+                type="range" min={30} max={70} step={5}
+                value={thresholds.soft}
+                onChange={(e) => setThresholds((t) => ({ ...t, soft: Number(e.target.value) }))}
+                className="w-full accent-yellow-500"
+              />
+              <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+                <span>30%</span><span>70%</span>
+              </div>
+            </div>
+
+            {/* Initial name leniency toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-700">Initial Name Leniency</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  When ON: "P. Kumar" vs "Prashant Kumar" gets extra leniency if last names match
+                </p>
+              </div>
+              <button
+                onClick={() => setThresholds((t) => ({ ...t, leniency: !t.leniency }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  thresholds.leniency ? "bg-indigo-600" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    thresholds.leniency ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Live preview */}
+            <div className={`rounded-lg px-4 py-3 text-xs space-y-1 ${isCustomThreshold ? "bg-yellow-50 border border-yellow-200" : "bg-gray-50 border border-gray-100"}`}>
+              <p className="font-semibold text-gray-700">
+                With these thresholds {isCustomThreshold ? "(custom)" : "(default)"}:
+              </p>
+              {PREVIEW_SCORES.map((s) => {
+                const r = previewResult(s, thresholds.pass, thresholds.soft);
+                return (
+                  <p key={s} className={`font-medium ${r.cls}`}>
+                    Score {s}% → {r.label}
+                  </p>
+                );
+              })}
+              {isCustomThreshold && (
+                <button
+                  onClick={() => setThresholds(DEFAULT_THRESHOLDS)}
+                  className="mt-1 text-indigo-600 underline text-xs"
+                >
+                  Reset to defaults
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* PAN + Aadhaar side by side */}
       <div className="grid grid-cols-2 gap-x-8 gap-y-4">
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">PAN Values</p>
-          <InputField label="PAN Number"     value={fields.pan.number}      onChange={(e) => setField("pan", "number", e.target.value)}      placeholder="ABCPK1234D" />
-          <InputField label="PAN Name"       value={fields.pan.name}        onChange={(e) => setField("pan", "name", e.target.value)}        placeholder="P. Kumar" />
-          <InputField label="Date of Birth"  value={fields.pan.dob}         onChange={(e) => setField("pan", "dob", e.target.value)}         placeholder="2004 arpil 6th" />
-          <InputField label="Gender"         value={fields.pan.gender}      onChange={(e) => setField("pan", "gender", e.target.value)}      placeholder="M or F" />
-          <InputField label="Father Name"    value={fields.pan.father_name} onChange={(e) => setField("pan", "father_name", e.target.value)} placeholder="R. Kumar" />
+          <InputField label="PAN Number"    value={fields.pan.number}      onChange={(e) => setField("pan", "number", e.target.value)}      placeholder="ABCPK1234D" />
+          <InputField label="PAN Name"      value={fields.pan.name}        onChange={(e) => setField("pan", "name", e.target.value)}        placeholder="P. Kumar" />
+          <InputField label="Date of Birth" value={fields.pan.dob}         onChange={(e) => setField("pan", "dob", e.target.value)}         placeholder="2004 arpil 6th" />
+          <InputField label="Gender"        value={fields.pan.gender}      onChange={(e) => setField("pan", "gender", e.target.value)}      placeholder="M or F" />
+          <InputField label="Father Name"   value={fields.pan.father_name} onChange={(e) => setField("pan", "father_name", e.target.value)} placeholder="R. Kumar" />
         </div>
-
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase tracking-widest text-teal-600">Aadhaar Values</p>
-          <InputField label="Aadhaar Last 4"  value={fields.aadhaar.last4}        onChange={(e) => setField("aadhaar", "last4", e.target.value)}        placeholder="1234" />
-          <InputField label="Aadhaar Name"    value={fields.aadhaar.name}         onChange={(e) => setField("aadhaar", "name", e.target.value)}         placeholder="Prashant Kumar" />
-          <InputField label="Date of Birth"   value={fields.aadhaar.dob}          onChange={(e) => setField("aadhaar", "dob", e.target.value)}          placeholder="1990/04/06" />
-          <InputField label="Gender"          value={fields.aadhaar.gender}       onChange={(e) => setField("aadhaar", "gender", e.target.value)}       placeholder="M or F" />
-          <InputField label="Father Name"     value={fields.aadhaar.father_name}  onChange={(e) => setField("aadhaar", "father_name", e.target.value)}  placeholder="Ramesh Kumar" />
+          <InputField label="Aadhaar Last 4"  value={fields.aadhaar.last4}       onChange={(e) => setField("aadhaar", "last4", e.target.value)}        placeholder="1234" />
+          <InputField label="Aadhaar Name"    value={fields.aadhaar.name}        onChange={(e) => setField("aadhaar", "name", e.target.value)}         placeholder="Prashant Kumar" />
+          <InputField label="Date of Birth"   value={fields.aadhaar.dob}         onChange={(e) => setField("aadhaar", "dob", e.target.value)}          placeholder="1990/04/06" />
+          <InputField label="Gender"          value={fields.aadhaar.gender}      onChange={(e) => setField("aadhaar", "gender", e.target.value)}       placeholder="M or F" />
+          <InputField label="Father Name"     value={fields.aadhaar.father_name} onChange={(e) => setField("aadhaar", "father_name", e.target.value)}  placeholder="Ramesh Kumar" />
         </div>
       </div>
 
-      {/* Bureau — full width, 4 cols */}
+      {/* Bureau */}
       <div className="space-y-3">
         <p className="text-xs font-bold uppercase tracking-widest text-orange-600">Bureau Values</p>
         <div className="grid grid-cols-4 gap-4">
-          <InputField label="Bureau Name"         value={fields.bureau.name}          onChange={(e) => setField("bureau", "name", e.target.value)}          placeholder="Prashant Kumar" />
-          <InputField label="Bureau DOB"          value={fields.bureau.dob}           onChange={(e) => setField("bureau", "dob", e.target.value)}           placeholder="1990-04-12" />
-          <InputField label="Bureau PAN Linked"   value={fields.bureau.pan_linked}    onChange={(e) => setField("bureau", "pan_linked", e.target.value)}    placeholder="ABCPK1234D" />
+          <InputField label="Bureau Name"          value={fields.bureau.name}          onChange={(e) => setField("bureau", "name", e.target.value)}          placeholder="Prashant Kumar" />
+          <InputField label="Bureau DOB"           value={fields.bureau.dob}           onChange={(e) => setField("bureau", "dob", e.target.value)}           placeholder="1990-04-12" />
+          <InputField label="Bureau PAN Linked"    value={fields.bureau.pan_linked}    onChange={(e) => setField("bureau", "pan_linked", e.target.value)}    placeholder="ABCPK1234D" />
           <InputField label="Bureau Aadhaar Last4" value={fields.bureau.aadhaar_last4} onChange={(e) => setField("bureau", "aadhaar_last4", e.target.value)} placeholder="1234" />
         </div>
       </div>
 
-      {/* Run button */}
       <button
         onClick={handleRun}
         disabled={loading}
@@ -129,6 +226,26 @@ export default function LiveTestPanel() {
       {/* Results */}
       {result && (
         <div className="space-y-4">
+          {/* Threshold note */}
+          {result.thresholds_used && (
+            <div className={`rounded-lg px-4 py-2 text-xs flex flex-wrap items-center gap-3 ${
+              isCustomThreshold ? "bg-yellow-50 border border-yellow-200" : "bg-gray-50 border border-gray-100"
+            }`}>
+              <span className="font-semibold text-gray-700">⚙️ Thresholds used:</span>
+              <span>Pass ≥{result.thresholds_used.pass_threshold}%</span>
+              <span>Soft ≥{result.thresholds_used.soft_threshold}%</span>
+              <span>Initial leniency: {result.thresholds_used.initial_leniency ? "ON" : "OFF"}</span>
+              {isCustomThreshold && (
+                <>
+                  <span className="text-yellow-600 font-medium">⚠ Custom thresholds active</span>
+                  <button onClick={() => setThresholds(DEFAULT_THRESHOLDS)} className="text-indigo-600 underline">
+                    Reset to defaults
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {dobCheck && (dobCheck.raw_input_a || dobCheck.raw_input_b) && (
             <div className="rounded-lg bg-gray-100 px-4 py-3 font-mono text-xs text-gray-700 space-y-1">
               <p className="font-sans text-xs font-semibold text-gray-500 mb-1">Date Normalization Preview</p>
@@ -139,15 +256,13 @@ export default function LiveTestPanel() {
 
           <VerdictBanner verdict={result.verdict} />
 
-          {/* Confidence Score Bar */}
           {result.confidence_score && (
             <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-semibold text-gray-800">Identity Confidence Score</span>
                 <span className={`font-bold text-base ${
                   result.confidence_score.color === "green" ? "text-green-600" :
-                  result.confidence_score.color === "yellow" ? "text-yellow-600" :
-                  "text-red-600"
+                  result.confidence_score.color === "yellow" ? "text-yellow-600" : "text-red-600"
                 }`}>
                   {result.confidence_score.score}%
                 </span>
@@ -156,8 +271,7 @@ export default function LiveTestPanel() {
                 <div
                   className={`h-3 rounded-full transition-all duration-700 ${
                     result.confidence_score.color === "green" ? "bg-green-500" :
-                    result.confidence_score.color === "yellow" ? "bg-yellow-500" :
-                    "bg-red-500"
+                    result.confidence_score.color === "yellow" ? "bg-yellow-500" : "bg-red-500"
                   }`}
                   style={{ width: `${result.confidence_score.score}%` }}
                 />
@@ -183,9 +297,7 @@ export default function LiveTestPanel() {
                     <td className="px-4 py-2 font-medium text-gray-800 whitespace-nowrap">
                       {c.check}
                       {c.is_custom && (
-                        <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-700">
-                          CUSTOM
-                        </span>
+                        <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-700">CUSTOM</span>
                       )}
                     </td>
                     <td className="px-4 py-2 text-gray-700">{c.input_a ?? "—"}</td>
@@ -195,7 +307,7 @@ export default function LiveTestPanel() {
                         {BADGE_LABEL[c.result] ?? c.result}
                       </span>
                       {c.fuzzy_score !== undefined && (
-                        <span className="ml-2 text-xs text-gray-400">({c.fuzzy_score})</span>
+                        <span className="ml-2 text-xs text-gray-400">({c.fuzzy_score}%)</span>
                       )}
                     </td>
                     <td className="px-4 py-2 text-gray-600 max-w-xs">{c.reason ?? "—"}</td>

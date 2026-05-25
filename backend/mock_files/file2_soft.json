@@ -19,5 +19,19 @@
     "dob": "1990-04-12",
     "pan_linked": "ABCPK1234D",
     "aadhaar_last4": "1234"
+  },
+  "addresses": {
+    "aadhaar": "Flat 3B, Shivaji Nagar, Pune 411005",
+    "pan": "Flat 3B Shivaji Ngr Pune",
+    "bank_statement": "3B Shivaji Nagar Pune 411005",
+    "gst": "Flat 3B, Shivaji Nagar, Pune 411005",
+    "self_declared": "Shivaji Nagar Pune"
+  },
+  "doc_dates": {
+    "aadhaar": 2024,
+    "pan": 2019,
+    "bank_statement": 2026,
+    "gst": 2025,
+    "self_declared": 2026
   }
 }

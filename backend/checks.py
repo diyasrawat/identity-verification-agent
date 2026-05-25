@@ -2,6 +2,138 @@ import re
 from rapidfuzz import fuzz
 
 
+# ── ADD 1: Gender normalization graph ─────────────────────────────────────────
+
+GENDER_GRAPH = {
+    "M": ["M", "MALE", "1", "BOY", "MAN", "GENTS",
+          "मेल", "पुरुष", "MASCULINE", "HE"],
+    "F": ["F", "FEMALE", "2", "GIRL", "WOMAN",
+          "LADIES", "महिला", "स्त्री", "FEMININE", "SHE"],
+    "O": ["T", "TRANS", "TRANSGENDER", "OTHER", "3",
+          "NONBINARY", "NON-BINARY"],
+}
+
+
+def normalize_gender(value: str) -> str:
+    if not value:
+        return "UNKNOWN"
+    value_upper = str(value).upper().strip()
+    for canonical, variants in GENDER_GRAPH.items():
+        if value_upper in variants:
+            return canonical
+    return value_upper
+
+
+# ── ADD 2: Aadhaar last-4 extraction ──────────────────────────────────────────
+
+AADHAAR_MASKING_PATTERNS = [
+    r'\d{4}$',
+    r'[Xx\*]{4,8}[-\s]?(\d{4})',
+    r'(\d{4})$',
+]
+
+
+def extract_aadhaar_last4(value: str) -> str:
+    if not value:
+        return ""
+    digits = re.findall(r'\d', str(value))
+    if len(digits) >= 4:
+        return ''.join(digits[-4:])
+    match = re.search(r'[Xx\*]{1,8}[-\s]?(\d{4})', str(value))
+    if match:
+        return match.group(1)
+    return str(value).strip()
+
+
+# ── ADD 3: PAN normalization ───────────────────────────────────────────────────
+
+def normalize_pan(pan: str) -> str:
+    if not pan:
+        return ""
+    pan = str(pan).upper().strip()
+    pan = re.sub(r'[\s\-_]', '', pan)
+    return pan
+
+
+# ── ADD 4: Father name prefix stripping ───────────────────────────────────────
+
+FATHER_PREFIX_GRAPH = [
+    "LATE", "SH", "SHRI", "S/O", "D/O", "W/O",
+    "C/O", "SON OF", "DAUGHTER OF", "WIFE OF",
+    "F/O", "FATHER OF", "CARE OF",
+]
+
+
+def normalize_father_name(name: str) -> str:
+    if not name:
+        return ""
+    name = normalize_name(name)
+    tokens = name.split()
+    while tokens and tokens[0] in FATHER_PREFIX_GRAPH:
+        tokens = tokens[1:]
+    return ' '.join(tokens)
+
+
+# ── ADD 5: Transliteration graph ──────────────────────────────────────────────
+
+TRANSLITERATION_GRAPH = {
+    # South Indian name endings
+    "PRASHANTH": "PRASHANT",
+    "SIDDHARTH": "SIDDHARTHA",
+    "SURESH": "SURESHA",
+    "RAMESH": "RAMESHA",
+    "PRAKASH": "PRAKASHA",
+    "VENKATESH": "VENKATESHA",
+    "RAJESH": "RAJESHA",
+    # Common vowel variations
+    "KUMAAR": "KUMAR",
+    "RAJOO": "RAJU",
+    "LAXMI": "LAKSHMI",
+    "LAKSMI": "LAKSHMI",
+    "BABU": "BABOO",
+    # Common surname variants
+    "SHARMA": "SARMA",
+    "VERMA": "VARMA",
+    "SINGH": "SING",
+    "SINHA": "SINGH",
+    "PANDEY": "PANDE",
+    "MUKHERJEE": "MUKERJEE",
+    "CHATTERJEE": "CHATERJEE",
+    "BANNERJEE": "BANERJEE",
+    # Mohammed variants — all normalize to MOHAMMAD
+    "MOHAMMED": "MOHAMMAD",
+    "MUHAMMED": "MOHAMMAD",
+    "MOHAMAD": "MOHAMMAD",
+    "MUHAMED": "MOHAMMAD",
+    "MEHMED": "MOHAMMAD",
+}
+
+
+def apply_transliteration(name: str) -> str:
+    name_upper = name.upper().strip()
+    tokens = name_upper.split()
+    normalized_tokens = []
+    for token in tokens:
+        canonical = TRANSLITERATION_GRAPH.get(token, token)
+        # Reverse check: if this token appears as a value, keep it as-is
+        for k, v in TRANSLITERATION_GRAPH.items():
+            if v == token:
+                canonical = v
+                break
+        normalized_tokens.append(canonical)
+    return ' '.join(normalized_tokens)
+
+
+def surnames_match(name_a: str, name_b: str) -> bool:
+    tokens_a = name_a.upper().replace('.', '').split()
+    tokens_b = name_b.upper().replace('.', '').split()
+    if not tokens_a or not tokens_b:
+        return False
+    return fuzz.ratio(tokens_a[-1], tokens_b[-1]) >= 85
+
+
+# ── Core normalization helpers ─────────────────────────────────────────────────
+
 def normalize_name(name: str) -> str:
     if not name:
         return ""
@@ -61,17 +193,13 @@ def normalize_date(date_str: str) -> str:
         parsed = dateparser.parse(cleaned, dayfirst=True)
         if parsed:
             return parsed.strftime("%Y-%m-%d")
-    except:
+    except Exception:
         pass
 
     return date_str.strip()
 
 
 def is_initial_match(name_a: str, name_b: str) -> bool:
-    """Return True if one name is an initial abbreviation of the other.
-    e.g. 'P KUMAR' vs 'PRASHANT KUMAR' → True (last name matches, first is initial)
-    e.g. 'R PANDEY' vs 'RAMESH KUMAR' → False (last names differ)
-    """
     tokens_a = name_a.upper().replace('.', '').split()
     tokens_b = name_b.upper().replace('.', '').split()
 
@@ -90,15 +218,23 @@ def is_initial_match(name_a: str, name_b: str) -> bool:
     return False
 
 
-def check_pan_format(pan_number):
-    pattern = r"^[A-Z]{5}[0-9]{4}[A-Z]$"
-    passed = bool(re.match(pattern, str(pan_number).upper()))
+# ── Check functions ────────────────────────────────────────────────────────────
+
+def check_pan_format(pan_number: str) -> dict:
+    normalized = normalize_pan(pan_number)
+    pattern = r'^[A-Z]{5}[0-9]{4}[A-Z]$'
+    valid = bool(re.match(pattern, normalized))
     return {
-        "check": "PAN Format",
+        "check": "PAN Format Validity",
         "input_a": pan_number,
-        "input_b": None,
-        "result": "pass" if passed else "hard_fail",
-        "reason": None if passed else f"PAN '{pan_number}' does not match required format AAAAA9999A",
+        "input_b": f"Normalized: {normalized}",
+        "result": "pass" if valid else "hard_fail",
+        "reason": (
+            f"PAN '{normalized}' is valid format."
+            if valid else
+            f"PAN '{normalized}' (normalized from '{pan_number}') "
+            f"does not match required format AAAAA9999A."
+        ),
     }
 
 
@@ -119,56 +255,124 @@ def check_dob(dob_a: str, dob_b: str, label_a="PAN", label_b="Aadhaar") -> dict:
     }
 
 
-def check_gender(gender_pan, gender_aadhaar):
-    passed = gender_pan == gender_aadhaar
-    return {
-        "check": "Gender (PAN vs Aadhaar)",
-        "input_a": gender_pan,
-        "input_b": gender_aadhaar,
-        "result": "pass" if passed else "hard_fail",
-        "reason": None if passed else f"Gender mismatch: PAN has '{gender_pan}', Aadhaar has '{gender_aadhaar}'",
-    }
+def check_gender(gender_pan: str, gender_aadhaar: str) -> dict:
+    norm_pan = normalize_gender(gender_pan)
+    norm_aadhaar = normalize_gender(gender_aadhaar)
 
-
-def check_aadhaar_last4(bureau_last4, aadhaar_last4):
-    passed = str(bureau_last4) == str(aadhaar_last4)
-    return {
-        "check": "Aadhaar Last 4 (Bureau vs Aadhaar)",
-        "input_a": bureau_last4,
-        "input_b": aadhaar_last4,
-        "result": "pass" if passed else "hard_fail",
-        "reason": None if passed else f"Aadhaar last-4 mismatch: Bureau has '{bureau_last4}', Aadhaar has '{aadhaar_last4}'",
-    }
-
-
-def check_name_fuzzy(name_a, name_b, label_a, label_b):
-    norm_a = normalize_name(name_a)
-    norm_b = normalize_name(name_b)
-    score = fuzz.token_sort_ratio(norm_a, norm_b)
-
-    # Initial abbreviation pattern takes priority
-    if is_initial_match(norm_a, norm_b):
+    if norm_pan == "UNKNOWN" or norm_aadhaar == "UNKNOWN":
         return {
-            "check": f"Name Match ({label_a} vs {label_b})",
-            "input_a": f"{label_a}: {name_a}",
-            "input_b": f"{label_b}: {name_b}",
+            "check": "Gender Match",
+            "input_a": f"PAN: {gender_pan} → {norm_pan}",
+            "input_b": f"Aadhaar: {gender_aadhaar} → {norm_aadhaar}",
             "result": "soft_fail",
-            "reason": None,  # LLM will explain
-            "fuzzy_score": round(score),
+            "reason": (
+                f"Gender value unrecognized — "
+                f"PAN: '{gender_pan}', Aadhaar: '{gender_aadhaar}'. "
+                f"Flagged for manual review."
+            ),
         }
 
-    if score >= 85:
-        result = "pass"
-        reason = f"Names match with {round(score)}% similarity."
-    elif score >= 55:
+    if norm_pan == norm_aadhaar:
+        return {
+            "check": "Gender Match",
+            "input_a": f"PAN: {gender_pan} → {norm_pan}",
+            "input_b": f"Aadhaar: {gender_aadhaar} → {norm_aadhaar}",
+            "result": "pass",
+            "reason": f"Gender matches after normalization: both map to '{norm_pan}'.",
+        }
+
+    if "O" in [norm_pan, norm_aadhaar]:
+        return {
+            "check": "Gender Match",
+            "input_a": f"PAN: {gender_pan} → {norm_pan}",
+            "input_b": f"Aadhaar: {gender_aadhaar} → {norm_aadhaar}",
+            "result": "soft_fail",
+            "reason": "Gender shows 'Other/Transgender' in one document — flagged for human review.",
+        }
+
+    return {
+        "check": "Gender Match",
+        "input_a": f"PAN: {gender_pan} → {norm_pan}",
+        "input_b": f"Aadhaar: {gender_aadhaar} → {norm_aadhaar}",
+        "result": "hard_fail",
+        "reason": (
+            f"Gender mismatch after normalization — "
+            f"PAN maps to '{norm_pan}', Aadhaar maps to '{norm_aadhaar}'. Hard block."
+        ),
+    }
+
+
+def check_aadhaar_last4(bureau_last4: str, aadhaar_last4: str) -> dict:
+    extracted_bureau = extract_aadhaar_last4(bureau_last4)
+    extracted_aadhaar = extract_aadhaar_last4(aadhaar_last4)
+    match = extracted_bureau == extracted_aadhaar
+    return {
+        "check": "Aadhaar Last-4 Consistency",
+        "input_a": f"Bureau: {bureau_last4} → extracted: {extracted_bureau}",
+        "input_b": f"Aadhaar: {aadhaar_last4} → extracted: {extracted_aadhaar}",
+        "result": "pass" if match else "hard_fail",
+        "reason": (
+            f"Aadhaar last-4 consistent: {extracted_bureau}."
+            if match else
+            f"Aadhaar last-4 mismatch — Bureau: '{extracted_bureau}', Aadhaar: '{extracted_aadhaar}'."
+        ),
+    }
+
+
+def check_name_fuzzy(name_a, name_b, label_a, label_b,
+                     pass_threshold=85, soft_threshold=55,
+                     initial_leniency=True):
+    # Layer 1: Basic normalization
+    norm_a = normalize_name(name_a)
+    norm_b = normalize_name(name_b)
+
+    # Layer 2: Transliteration normalization
+    trans_a = apply_transliteration(norm_a)
+    trans_b = apply_transliteration(norm_b)
+
+    # Layer 3: Initial detection
+    initial_match = is_initial_match(norm_a, norm_b)
+
+    # Layer 4: Compute scores at each layer
+    raw_score = fuzz.token_sort_ratio(norm_a, norm_b)
+    trans_score = fuzz.token_sort_ratio(trans_a, trans_b)
+
+    # Take best score across layers
+    best_score = max(raw_score, trans_score)
+    was_transliterated = trans_score > raw_score
+
+    # Layer 5: Adjust thresholds based on graph findings
+    adj_pass = pass_threshold
+    adj_soft = soft_threshold
+
+    if initial_leniency and initial_match:
+        adj_pass -= 10
+        adj_soft -= 15
+
+    if was_transliterated:
+        adj_soft -= 10
+
+    # Layer 6: Verdict
+    if initial_leniency and initial_match and surnames_match(norm_a, norm_b):
         result = "soft_fail"
         reason = None  # LLM explains
+    elif best_score >= adj_pass:
+        result = "pass"
+        reason = (
+            f"Names match"
+            f"{' after transliteration' if was_transliterated else ''}"
+            f" ({round(best_score)}% similarity)."
+        )
+    elif best_score >= adj_soft:
+        result = "soft_fail"
+        reason = None
     else:
         result = "hard_fail"
         reason = (
             f"Names too different — '{name_a}' vs '{name_b}' "
-            f"(similarity: {round(score)}%). "
-            f"Last names may differ — this is a hard block."
+            f"({round(best_score)}% similarity). "
+            f"{'Transliteration attempted but still failed. ' if was_transliterated else ''}"
+            f"Hard block."
         )
 
     return {
@@ -177,12 +381,22 @@ def check_name_fuzzy(name_a, name_b, label_a, label_b):
         "input_b": f"{label_b}: {name_b}",
         "result": result,
         "reason": reason,
-        "fuzzy_score": round(score),
+        "fuzzy_score": round(best_score),
+        "raw_score": round(raw_score),
+        "transliteration_applied": was_transliterated,
+        "initial_match_detected": initial_match,
+        "thresholds_used": {"pass": adj_pass, "soft": adj_soft},
     }
 
 
-def check_father_name(fname_pan, fname_aadhaar):
-    result = check_name_fuzzy(fname_pan, fname_aadhaar, "PAN", "Aadhaar")
+def check_father_name(fname_pan, fname_aadhaar,
+                      pass_threshold=85, soft_threshold=55,
+                      initial_leniency=True):
+    # Strip prefixes before fuzzy matching
+    clean_pan = normalize_father_name(fname_pan)
+    clean_aadhaar = normalize_father_name(fname_aadhaar)
+    result = check_name_fuzzy(clean_pan, clean_aadhaar, "PAN", "Aadhaar",
+                               pass_threshold, soft_threshold, initial_leniency)
     result["check"] = "Father Name (PAN vs Aadhaar)"
     return result
 
@@ -194,3 +408,34 @@ def compute_overall_verdict(checks):
     if "soft_fail" in results:
         return "SOFT ISSUES — HUMAN REVIEW"
     return "CLEAN"
+
+
+def compute_confidence_score(checks: list) -> dict:
+    total = len(checks)
+    if total == 0:
+        return {"score": 0, "label": "NO DATA", "color": "gray"}
+
+    weights = {"pass": 100, "soft_fail": 40, "hard_fail": 0}
+    critical_prefixes = ["Date of Birth", "PAN Format", "Aadhaar Last"]
+
+    weighted_sum = 0
+    weight_total = 0
+
+    for check in checks:
+        result = check.get("result", "hard_fail")
+        score = weights.get(result, 0)
+        is_critical = any(p in check.get("check", "") for p in critical_prefixes)
+        w = 2 if is_critical else 1
+        weighted_sum += score * w
+        weight_total += 100 * w
+
+    final_score = round((weighted_sum / weight_total) * 100)
+
+    if final_score >= 85:
+        label, color = "HIGH CONFIDENCE", "green"
+    elif final_score >= 55:
+        label, color = "MEDIUM CONFIDENCE", "yellow"
+    else:
+        label, color = "LOW CONFIDENCE", "red"
+
+    return {"score": final_score, "label": label, "color": color}

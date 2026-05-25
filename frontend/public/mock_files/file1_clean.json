@@ -19,5 +19,19 @@
     "dob": "1990-04-12",
     "pan_linked": "ABCPK1234D",
     "aadhaar_last4": "1234"
+  },
+  "addresses": {
+    "aadhaar": "12, MG Road, Shivaji Nagar, Pune 411001",
+    "pan": "12 MG Road, Shivaji Nagar, Pune",
+    "bank_statement": "12, Mahatma Gandhi Road, Pune 411001",
+    "gst": "Plot 12, MG Road, Shivaji Nagar, Pune 411001",
+    "self_declared": "12 MG Road Pune 411001"
+  },
+  "doc_dates": {
+    "aadhaar": 2024,
+    "pan": 2019,
+    "bank_statement": 2026,
+    "gst": 2025,
+    "self_declared": 2026
   }
 }

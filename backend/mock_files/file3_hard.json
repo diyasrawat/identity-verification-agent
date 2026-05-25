@@ -19,5 +19,19 @@
     "dob": "1985-07-23",
     "pan_linked": "ABCPK1234D",
     "aadhaar_last4": "1234"
+  },
+  "addresses": {
+    "aadhaar": "12, MG Road, Pune 411001",
+    "pan": "45, Linking Road, Bandra, Mumbai 400050",
+    "bank_statement": "45 Linking Rd, Bandra West, Mumbai 400050",
+    "gst": "12 MG Road Pune 411001",
+    "self_declared": "Bandra Mumbai"
+  },
+  "doc_dates": {
+    "aadhaar": 2024,
+    "pan": 2019,
+    "bank_statement": 2026,
+    "gst": 2025,
+    "self_declared": 2026
   }
 }
