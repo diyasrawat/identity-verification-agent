@@ -1,4 +1,4 @@
-# Identity Cross-Verification Agent
+# VerifyIQ: Identity Cross-Verification Agent
 
 An AI-powered identity verification system that cross-checks PAN, Aadhaar, and Bureau data for Indian lending applications. It runs 7 deterministic checks in under 100ms, then calls Claude Haiku only when a soft mismatch is detected — keeping AI costs near zero while still surfacing intelligent explanations.
 
