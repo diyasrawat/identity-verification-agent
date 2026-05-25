@@ -35,6 +35,11 @@ export default function LedgerTable({ checks, onAskAI }) {
             <tr key={i} className={ROW_BG[check.result] ?? ""}>
               <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
                 {check.check}
+                {check.is_custom && (
+                  <span className="ml-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-bold text-purple-700">
+                    CUSTOM RULE
+                  </span>
+                )}
               </td>
               <td className="px-4 py-3 text-gray-700">
                 {check.input_a ?? <span className="text-gray-400">—</span>}
@@ -48,10 +53,16 @@ export default function LedgerTable({ checks, onAskAI }) {
                 >
                   {BADGE_LABEL[check.result] ?? check.result}
                 </span>
-                {check.fuzzy_score !== undefined && (
-                  <span className="ml-2 text-xs text-gray-400">
-                    ({check.fuzzy_score})
-                  </span>
+                {check.fuzzy_score !== undefined && check.result === "soft_fail" && (
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    ({check.fuzzy_score}% match)
+                  </div>
+                )}
+                {check.fuzzy_score !== undefined && check.result === "hard_fail" &&
+                  (check.check ?? "").toLowerCase().includes("name") && (
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    ({check.fuzzy_score}% match)
+                  </div>
                 )}
               </td>
               <td className="px-4 py-3 text-gray-600 max-w-xs">

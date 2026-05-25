@@ -4,6 +4,8 @@ const ARCH_NOTES = `Architecture: Hybrid deterministic + AI. 7 checks run as pur
 import VerdictBanner from "./components/VerdictBanner";
 import LedgerTable from "./components/LedgerTable";
 import AskAIDrawer from "./components/AskAIDrawer";
+import LiveTestPanel from "./components/LiveTestPanel";
+import RuleEngine from "./components/RuleEngine";
 
 const FILES = [
   { id: "FL-001", label: "FL-001 — Clean", file: "/mock_files/file1_clean.json" },
@@ -104,6 +106,62 @@ export default function App() {
         {result && !loading && (
           <>
             <VerdictBanner verdict={result.verdict} />
+
+            {/* Confidence Score Bar */}
+            {result.confidence_score && (
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold text-gray-800">Identity Confidence Score</span>
+                  <span className={`font-bold text-lg ${
+                    result.confidence_score.color === "green" ? "text-green-600" :
+                    result.confidence_score.color === "yellow" ? "text-yellow-600" :
+                    "text-red-600"
+                  }`}>
+                    {result.confidence_score.score}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-4">
+                  <div
+                    className={`h-4 rounded-full transition-all duration-700 ${
+                      result.confidence_score.color === "green" ? "bg-green-500" :
+                      result.confidence_score.color === "yellow" ? "bg-yellow-500" :
+                      "bg-red-500"
+                    }`}
+                    style={{ width: `${result.confidence_score.score}%` }}
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  {result.confidence_score.label}
+                  {" · "}Critical checks (DOB, PAN format, Aadhaar) weighted 2×
+                </p>
+              </div>
+            )}
+
+            {/* Agent Analysis card */}
+            {result.agent_note && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-indigo-600 text-lg">🤖</span>
+                  <span className="font-bold text-indigo-900">Agent Analysis</span>
+                  <span
+                    className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${
+                      result.recommendation === "PROCEED"
+                        ? "bg-green-100 text-green-800"
+                        : result.recommendation === "REJECT"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {result.recommendation}
+                  </span>
+                </div>
+                <p className="text-sm text-indigo-800 mb-2">{result.agent_note}</p>
+                <p className="text-xs text-indigo-600">
+                  Confidence: {result.confidence} · {result.reasoning}
+                </p>
+              </div>
+            )}
+
             <LedgerTable checks={result.checks} onAskAI={setAskAICheck} />
 
             {/* Footer stats */}
@@ -128,6 +186,16 @@ export default function App() {
           </>
         )}
       </main>
+
+      {/* Rule Engine */}
+      <div className="max-w-6xl mx-auto px-6 mt-10">
+        <RuleEngine />
+      </div>
+
+      {/* Live Test Panel */}
+      <div className="max-w-6xl mx-auto px-6 mt-10">
+        <LiveTestPanel />
+      </div>
 
       {/* Architecture Notes */}
       <div className="max-w-6xl mx-auto px-6 pb-10">

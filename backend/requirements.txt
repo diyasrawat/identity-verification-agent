@@ -3,3 +3,5 @@ uvicorn
 rapidfuzz
 openai
 python-multipart
+python-dateutil
+python-dotenv
