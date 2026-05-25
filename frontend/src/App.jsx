@@ -57,7 +57,7 @@ export default function App() {
       {/* Top bar */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <h1 className="text-lg font-bold text-gray-800">
-          Identity Cross-Verification Agent
+          VerifyIQ: Identity Cross-Verification Agent
         </h1>
         <p className="text-xs text-gray-500 mt-0.5">
           FlexiLoans · Underwriting Desk
