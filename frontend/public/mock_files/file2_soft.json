@@ -1,0 +1,23 @@
+{
+  "applicant_id": "FL-002",
+  "pan": {
+    "name": "P. Kumar",
+    "number": "ABCPK1234D",
+    "dob": "1990-04-12",
+    "gender": "M",
+    "father_name": "R. Kumar"
+  },
+  "aadhaar": {
+    "last4": "1234",
+    "name": "Prashant Kumar",
+    "dob": "1990-04-12",
+    "gender": "M",
+    "father_name": "Ramesh Kumar"
+  },
+  "bureau": {
+    "name": "Prashant Kumar",
+    "dob": "1990-04-12",
+    "pan_linked": "ABCPK1234D",
+    "aadhaar_last4": "1234"
+  }
+}

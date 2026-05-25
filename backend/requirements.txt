@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+rapidfuzz
+openai
+python-multipart
