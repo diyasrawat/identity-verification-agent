@@ -2,6 +2,10 @@
 
 An AI-powered identity verification system for Indian lending that cross-checks PAN, Aadhaar, and Bureau data. It runs 7 deterministic checks in under 100ms, then an AI agent performs a second-pass reasoning step — keeping costs near zero while surfacing intelligent, structured verdicts for underwriters. Includes a live rule engine where users write rules in plain English and the agent converts them to executable Python checks in real time.
 
+<img width="1919" height="921" alt="image" src="https://github.com/user-attachments/assets/f48d1890-c6b4-42c6-8bfb-ed0168a743ec" />
+<img width="1914" height="938" alt="image" src="https://github.com/user-attachments/assets/a6e9cbc7-b413-4e0d-9842-80072df34fa5" />
+
+
 ## How to Run
 
 ```bash
