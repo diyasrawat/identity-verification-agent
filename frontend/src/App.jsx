@@ -11,6 +11,7 @@ import AuditTrail from "./components/AuditTrail";
 import UnderwriterNotes from "./components/UnderwriterNotes";
 import SelfImprovingAgent from "./components/SelfImprovingAgent";
 import HealingPanel from "./components/HealingPanel";
+import MemoryDashboard from "./components/MemoryDashboard";
 
 const FILES = [
   { id: "FL-001", label: "FL-001 — Clean", file: "/mock_files/file1_clean.json" },
@@ -28,6 +29,7 @@ const TABS = [
   { id: "audit", label: "Audit Trail" },
   { id: "self-improve", label: "🧠 Self-Improving" },
   { id: "healing", label: "🔧 Self-Healing" },
+  { id: "memory", label: "💾 Memory & History" },
 ];
 
 export default function App() {
@@ -42,6 +44,8 @@ export default function App() {
   const [metrics, setMetrics] = useState(null);
   const [metricsOpen, setMetricsOpen] = useState(false);
   const [metricsLoading, setMetricsLoading] = useState(false);
+  const [judgeRunning, setJudgeRunning] = useState(false);
+  const [judgeToast, setJudgeToast] = useState(null);
 
   useEffect(() => {
     const poll = async () => {
@@ -100,14 +104,56 @@ export default function App() {
   const hardFails = checks.filter((c) => c.result === "hard_fail").length;
   const softFails = checks.filter((c) => c.result === "soft_fail").length;
 
+  async function handleJudgeDemo() {
+    setJudgeRunning(true);
+    setJudgeToast(null);
+    try {
+      const res = await fetch("/api/test/run-all-judge-cases", { method: "POST" });
+      const data = await res.json();
+      setJudgeToast({
+        type: data.accuracy === 100 ? "success" : "warn",
+        msg: `Judge Demo: ${data.correct}/${data.total} passed (${data.accuracy}% accuracy) · Session saved to Memory`,
+      });
+      setActiveTab("memory");
+    } catch (e) {
+      setJudgeToast({ type: "error", msg: "Judge Demo failed — is the backend running?" });
+    } finally {
+      setJudgeRunning(false);
+      setTimeout(() => setJudgeToast(null), 6000);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
+      {/* Toast notification */}
+      {judgeToast && (
+        <div className={`fixed top-4 right-4 z-50 rounded-xl px-5 py-3 text-sm font-medium shadow-lg transition-all ${
+          judgeToast.type === "success" ? "bg-green-600 text-white" :
+          judgeToast.type === "warn" ? "bg-yellow-500 text-white" : "bg-red-600 text-white"
+        }`}>
+          {judgeToast.msg}
+        </div>
+      )}
+
       {/* Top bar */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-lg font-bold text-gray-800">
-          VerifyIQ: Identity Cross-Verification Agent
-        </h1>
-        <p className="text-xs text-gray-500 mt-0.5">FlexiLoans · Underwriting Desk</p>
+      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-gray-800">
+            VerifyIQ: Identity Cross-Verification Agent
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">FlexiLoans · Underwriting Desk</p>
+        </div>
+        <button
+          onClick={handleJudgeDemo}
+          disabled={judgeRunning}
+          className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-60 transition-colors flex items-center gap-2"
+        >
+          {judgeRunning ? (
+            <><span className="animate-spin">⚙️</span> Running 10 Judge Cases…</>
+          ) : (
+            <><span>⚖️</span> Run Judge Demo</>
+          )}
+        </button>
       </header>
 
       {/* Tab bar */}
@@ -394,6 +440,9 @@ export default function App() {
 
         {/* ── Self-Healing tab ────────────────────────────────────────────── */}
         {activeTab === "healing" && <HealingPanel />}
+
+        {/* ── Memory & History tab ────────────────────────────────────────── */}
+        {activeTab === "memory" && <MemoryDashboard />}
       </main>
 
       {/* Ask AI Drawer */}

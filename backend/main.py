@@ -488,3 +488,76 @@ async def history_test_sessions(limit: int = 100):
 @app.get("/history/patterns")
 async def history_patterns():
     return get_pattern_memory()
+
+
+# ── Judge test cases endpoint ──────────────────────────────────────────────────
+
+@app.post("/test/run-all-judge-cases")
+async def run_all_judge_cases():
+    from test_data.judge_test_cases import JUDGE_TEST_CASES
+    import uuid
+
+    session_id = f"judge-{uuid.uuid4().hex[:8]}"
+    results = []
+
+    for tc in JUDGE_TEST_CASES:
+        pan = tc["pan"]
+        aadhaar = tc["aadhaar"]
+        bureau = tc["bureau"]
+
+        checks = [
+            check_pan_format(pan.get("number", "")),
+            check_dob(pan.get("dob", ""), aadhaar.get("dob", "")),
+            check_gender(pan.get("gender", ""), aadhaar.get("gender", "")),
+            check_aadhaar_last4(bureau.get("aadhaar_last4", ""), aadhaar.get("last4", "")),
+            check_name_fuzzy(pan.get("name", ""), aadhaar.get("name", ""), "PAN", "Aadhaar"),
+            check_name_fuzzy(bureau.get("name", ""), pan.get("name", ""), "Bureau", "PAN"),
+            check_father_name(pan.get("father_name", ""), aadhaar.get("father_name", "")),
+        ]
+
+        for check in checks:
+            if check["result"] == "soft_fail" and check.get("reason") is None:
+                check["reason"] = explain_soft_fail(
+                    check["check"], check["input_a"], check["input_b"]
+                )
+
+        run_custom_rules(checks, tc)
+        verdict = compute_overall_verdict(checks)
+        confidence = compute_confidence_score(checks)
+        expected = tc.get("expected_verdict", "")
+        passed = verdict == expected
+
+        try:
+            save_test_session(
+                session_id=session_id,
+                test_case_name=tc["name"],
+                test_category=tc["category"],
+                verdict=verdict,
+                confidence=confidence,
+                checks=checks,
+                pass_threshold=85,
+                soft_threshold=55,
+                initial_leniency=True,
+            )
+        except Exception:
+            pass
+
+        results.append({
+            "name": tc["name"],
+            "description": tc["description"],
+            "expected_verdict": expected,
+            "actual_verdict": verdict,
+            "passed": passed,
+            "confidence_score": confidence,
+            "checks": checks,
+        })
+
+    total = len(results)
+    correct = sum(1 for r in results if r["passed"])
+    return {
+        "session_id": session_id,
+        "total": total,
+        "correct": correct,
+        "accuracy": round(correct / total * 100, 1),
+        "results": results,
+    }

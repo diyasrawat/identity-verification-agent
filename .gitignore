@@ -5,3 +5,4 @@ venv/
 dist/
 .DS_Store
 *.pyc
+backend/memory_data/*.json

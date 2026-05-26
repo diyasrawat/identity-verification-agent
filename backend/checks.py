@@ -165,7 +165,7 @@ def normalize_date(date_str: str) -> str:
     cleaned = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str, flags=re.IGNORECASE)
 
     typo_map = {
-        "arpil": "april", "apirl": "april", "apri": "april",
+        "arpil": "april", "apirl": "april",
         "januray": "january", "janury": "january",
         "feburary": "february", "febuary": "february",
         "marh": "march", "mrach": "march",
@@ -177,7 +177,7 @@ def normalize_date(date_str: str) -> str:
     }
     cleaned_lower = cleaned.lower()
     for typo, correct in typo_map.items():
-        cleaned_lower = cleaned_lower.replace(typo, correct)
+        cleaned_lower = re.sub(r'\b' + typo + r'\b', correct, cleaned_lower)
     cleaned = cleaned_lower
 
     for date_input in [cleaned, date_str.lower()]:

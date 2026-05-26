@@ -34,12 +34,17 @@ function previewResult(score, pass_t, soft_t) {
   return { label: "🚫 HARD FAIL", cls: "text-red-600" };
 }
 
+const CATEGORIES = ["manual", "name_test", "dob_test", "gender_test", "pan_test", "judge_demo"];
+
 export default function LiveTestPanel() {
   const [fields, setFields] = useState(DEFAULT_FIELDS);
   const [thresholds, setThresholds] = useState(DEFAULT_THRESHOLDS);
   const [thresholdOpen, setThresholdOpen] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [testCaseName, setTestCaseName] = useState("");
+  const [testCategory, setTestCategory] = useState("manual");
+  const [lastSaved, setLastSaved] = useState(null);
 
   function setField(section, key, value) {
     setFields((prev) => ({ ...prev, [section]: { ...prev[section], [key]: value } }));
@@ -53,7 +58,9 @@ export default function LiveTestPanel() {
   async function handleRun() {
     setLoading(true);
     setResult(null);
+    setLastSaved(null);
     try {
+      const sessionId = testCaseName ? `sess-${Date.now()}` : "";
       const res = await fetch("/api/verify-live", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,9 +69,14 @@ export default function LiveTestPanel() {
           pass_threshold: thresholds.pass,
           soft_threshold: thresholds.soft,
           initial_leniency: thresholds.leniency,
+          test_case_name: testCaseName,
+          test_category: testCategory,
+          session_id: sessionId,
         }),
       });
-      setResult(await res.json());
+      const data = await res.json();
+      setResult(data);
+      if (testCaseName) setLastSaved(testCaseName);
     } catch (err) {
       console.error("Live test failed:", err);
     } finally {
@@ -215,6 +227,40 @@ export default function LiveTestPanel() {
         </div>
       </div>
 
+      {/* Test session metadata */}
+      <div className="border border-dashed border-gray-300 rounded-xl p-4 space-y-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-purple-600">Save to History (optional)</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-600">Test Case Name</label>
+            <input
+              type="text"
+              value={testCaseName}
+              onChange={(e) => setTestCaseName(e.target.value)}
+              placeholder="e.g. P_Kumar_initial_name"
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-gray-600">Category</label>
+            <select
+              value={testCategory}
+              onChange={(e) => setTestCategory(e.target.value)}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {testCaseName && (
+          <p className="text-xs text-purple-600">
+            This run will be saved to Memory &gt; Test Sessions under "{testCategory}"
+          </p>
+        )}
+      </div>
+
       <button
         onClick={handleRun}
         disabled={loading}
@@ -222,6 +268,12 @@ export default function LiveTestPanel() {
       >
         {loading ? "Running verification…" : "Run Live Verification"}
       </button>
+
+      {lastSaved && (
+        <div className="rounded-lg bg-purple-50 border border-purple-200 px-4 py-2 text-xs text-purple-700 font-medium">
+          Saved to history as "{lastSaved}" — view in 💾 Memory & History tab
+        </div>
+      )}
 
       {/* Results */}
       {result && (
