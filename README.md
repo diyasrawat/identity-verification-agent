@@ -1,6 +1,6 @@
 # VerifyIQ: Identity Cross-Verification Agent
 
-> **FlexiLoans Hackathon — Underwriting Intelligence Platform**  
+> **FlexiLoans Hackathon - Underwriting Intelligence Platform**  
 > An agentic AI system that cross-verifies Indian identity documents (PAN, Aadhaar, Bureau) for loan underwriting, using a 7-agent pipeline, multi-layer fuzzy matching, self-healing, and self-improving capabilities.
 
 <img width="1919" height="921" alt="image" src="https://github.com/user-attachments/assets/c10f3c92-6f53-4fd9-be05-8817738ce3c3" />
