@@ -10,6 +10,10 @@
 
 **DEMO VIDEO:** [https://drive.google.com/file/d/1ZfmXZlZgxqqYi-0prhApykUZYuLplzM1/view?usp=drive_link](https://drive.google.com/file/d/1V2EBppbVRUJlgTmoYiNP-U8tXlR07N-a/view?usp=sharing)
 
+Try For Yourself:
+**Live Demo:** https://identity-verification-agent.vercel.app
+**API Docs:** https://flexiloans-backend.onrender.com/docs  
+**GitHub:** https://github.com/diyasrawat/identity-verification-agent
 ---
 
 ## Problem Statement
