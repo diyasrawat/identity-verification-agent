@@ -14,7 +14,7 @@ export default function HealingPanel() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`https://flexiloans-backend.onrender.com/api/healing/log`);
+        const res = await fetch(`https://flexiloans-backend.onrender.com/healing/log`);
         setData(await res.json());
       } catch {}
     };

@@ -13,7 +13,7 @@ export default function AuditTrail() {
 
   const fetchAudit = async () => {
     try {
-      const res = await fetch(`https://flexiloans-backend.onrender.com/api/audit`);
+      const res = await fetch(`https://flexiloans-backend.onrender.com/audit`);
       const data = await res.json();
       setEntries((data.entries || []).slice().reverse());
     } catch {}

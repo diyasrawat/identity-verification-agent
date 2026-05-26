@@ -55,7 +55,7 @@ export default function LiveTestPanel() {
     setLoading(true); setResult(null); setLastSaved(null);
     try {
       const sessionId = testCaseName ? `sess-${Date.now()}` : "";
-      const res = await fetch(`https://flexiloans-backend.onrender.com/api/verify-live`, {
+      const res = await fetch(`https://flexiloans-backend.onrender.com/verify-live`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -282,7 +282,7 @@ export default function LiveTestPanel() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {result.checks.map((c, i) => (
+                {(result.checks || []).map((c, i) => (
                   <tr key={i} className={`bg-gray-900 ${ROW_BG[c.result] ?? ""}`}>
                     <td className="px-4 py-2 font-medium text-gray-100 whitespace-nowrap">
                       {c.check}

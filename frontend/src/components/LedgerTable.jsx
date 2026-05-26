@@ -31,7 +31,7 @@ export default function LedgerTable({ checks, onAskAI }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-800">
-          {checks.map((check, i) => (
+          {(checks || []).map((check, i) => (
             <tr key={i} className={`bg-gray-900 ${ROW_BG[check.result] ?? ""}`}>
               <td className="px-4 py-3 font-medium text-gray-100 whitespace-nowrap">
                 {check.check}

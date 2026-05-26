@@ -9,7 +9,7 @@ export default function AskAIDrawer({ check, profile, onClose }) {
     setLoading(true);
     setExplanation(null);
     try {
-      const res = await fetch(`https://flexiloans-backend.onrender.com/api/explain`, {
+      const res = await fetch(`https://flexiloans-backend.onrender.com/explain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ check, full_profile: profile }),

@@ -21,7 +21,7 @@ export default function RuleEngine() {
 
   async function fetchRules() {
     try {
-      const res  = await fetch(`https://flexiloans-backend.onrender.com/api/rules/list`);
+      const res  = await fetch(`https://flexiloans-backend.onrender.com/rules/list`);
       const data = await res.json();
       setActiveRules(data.rules ?? []);
     } catch {}
@@ -32,7 +32,7 @@ export default function RuleEngine() {
     setGenerating(true);
     setGenerated(null);
     try {
-      const res  = await fetch(`https://flexiloans-backend.onrender.com/api/rules/create`, {
+      const res  = await fetch(`https://flexiloans-backend.onrender.com/rules/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rule_description: ruleText.trim() }),
@@ -49,7 +49,7 @@ export default function RuleEngine() {
     if (!generated) return;
     setSaving(true);
     try {
-      await fetch(`https://flexiloans-backend.onrender.com/api/rules/save`, {
+      await fetch(`https://flexiloans-backend.onrender.com/rules/save`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(generated),
@@ -66,7 +66,7 @@ export default function RuleEngine() {
 
   async function handleDelete(func_name) {
     try {
-      await fetch(`https://flexiloans-backend.onrender.com/api/rules/${func_name}`, { method: "DELETE" });
+      await fetch(`https://flexiloans-backend.onrender.com/rules/${func_name}`, { method: "DELETE" });
       await fetchRules();
     } catch (err) {
       console.error("Delete failed:", err);

@@ -48,10 +48,10 @@ export default function MemoryDashboard() {
     setLoading(true);
     try {
       const [statsRes, verRes, sesRes, patRes] = await Promise.all([
-        fetch(`https://flexiloans-backend.onrender.com/api/memory/stats`).then((r) => r.json()),
-        fetch(`https://flexiloans-backend.onrender.com/api/history/verifications?limit=20`).then((r) => r.json()),
-        fetch(`https://flexiloans-backend.onrender.com/api/history/test-sessions?limit=50`).then((r) => r.json()),
-        fetch(`https://flexiloans-backend.onrender.com/api/history/patterns`).then((r) => r.json()),
+        fetch(`https://flexiloans-backend.onrender.com/memory/stats`).then((r) => r.json()),
+        fetch(`https://flexiloans-backend.onrender.com/history/verifications?limit=20`).then((r) => r.json()),
+        fetch(`https://flexiloans-backend.onrender.com/history/test-sessions?limit=50`).then((r) => r.json()),
+        fetch(`https://flexiloans-backend.onrender.com/history/patterns`).then((r) => r.json()),
       ]);
       setStats(statsRes);
       setVerifications(verRes.verifications ?? []);
@@ -69,7 +69,7 @@ export default function MemoryDashboard() {
   async function handleReset(key) {
     if (!window.confirm(`Reset "${key}"? This cannot be undone.`)) return;
     setResetting(key);
-    await fetch(`https://flexiloans-backend.onrender.com/api/memory/reset`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }) });
+    await fetch(`https://flexiloans-backend.onrender.com/memory/reset`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }) });
     setResetting(null);
     load();
   }

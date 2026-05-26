@@ -71,8 +71,8 @@ export default function SelfImprovingAgent() {
   const [trainLoading, setTrainLoading] = useState({});
   const [approving,    setApproving]    = useState({});
 
-  const fetchStats     = useCallback(async () => { try { const r = await fetch(`https://flexiloans-backend.onrender.com/api/self-improve/stats`);     setStats(await r.json());    } catch {} }, []);
-  const fetchProposals = useCallback(async () => { try { const r = await fetch(`https://flexiloans-backend.onrender.com/api/self-improve/proposals`); setProposals(await r.json()); } catch {} }, []);
+  const fetchStats     = useCallback(async () => { try { const r = await fetch(`https://flexiloans-backend.onrender.com/self-improve/stats`);     setStats(await r.json());    } catch {} }, []);
+  const fetchProposals = useCallback(async () => { try { const r = await fetch(`https://flexiloans-backend.onrender.com/self-improve/proposals`); const d = await r.json(); setProposals({ pending: d.pending || [], approved: d.approved || [], rejected: d.rejected || [] }); } catch {} }, []);
 
   useEffect(() => {
     fetchStats(); fetchProposals();
@@ -84,7 +84,7 @@ export default function SelfImprovingAgent() {
   async function runTrainingCard(card) {
     setTrainLoading((p) => ({ ...p, [card.id]: true }));
     try {
-      const res = await fetch(`https://flexiloans-backend.onrender.com/api/orchestrate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(card.payload) });
+      const res = await fetch(`https://flexiloans-backend.onrender.com/orchestrate`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(card.payload) });
       const data = await res.json();
       const checks = data.checks || [];
       const hf = checks.filter((c) => c.result === "hard_fail").length;
@@ -102,11 +102,11 @@ export default function SelfImprovingAgent() {
   async function handleApprove(proposalId) {
     setApproving((p) => ({ ...p, [proposalId]: true }));
     try {
-      const res = await fetch(`https://flexiloans-backend.onrender.com/api/self-improve/proposals/${proposalId}/approve`, { method: "POST" });
+      const res = await fetch(`https://flexiloans-backend.onrender.com/self-improve/proposals/${proposalId}/approve`, { method: "POST" });
       const updated = await res.json();
       await fetchProposals();
       if (updated.generated_code) {
-        setProposals((prev) => ({ ...prev, approved: prev.approved.map((p) => p.id === proposalId ? { ...p, generated_code: updated.generated_code } : p) }));
+        setProposals((prev) => ({ ...prev, approved: (prev.approved || []).map((p) => p.id === proposalId ? { ...p, generated_code: updated.generated_code } : p) }));
       }
     } finally {
       setApproving((p) => ({ ...p, [proposalId]: false }));
@@ -114,7 +114,7 @@ export default function SelfImprovingAgent() {
   }
 
   async function handleReject(proposalId) {
-    await fetch(`https://flexiloans-backend.onrender.com/api/self-improve/proposals/${proposalId}/reject`, { method: "POST" });
+    await fetch(`https://flexiloans-backend.onrender.com/self-improve/proposals/${proposalId}/reject`, { method: "POST" });
     await fetchProposals();
   }
 
