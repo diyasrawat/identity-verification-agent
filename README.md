@@ -8,7 +8,7 @@
 <img width="1909" height="894" alt="image" src="https://github.com/user-attachments/assets/459f6938-d50c-4cb6-9aba-8be86dc54141" />
 
 
-**DEMO VIDEO:** [https://drive.google.com/file/d/1ZfmXZlZgxqqYi-0prhApykUZYuLplzM1/view?usp=drive_link](https://drive.google.com/file/d/1ZfmXZlZgxqqYi-0prhApykUZYuLplzM1/view?usp=drive_link)
+**DEMO VIDEO:** [https://drive.google.com/file/d/1ZfmXZlZgxqqYi-0prhApykUZYuLplzM1/view?usp=drive_link](https://drive.google.com/file/d/1V2EBppbVRUJlgTmoYiNP-U8tXlR07N-a/view?usp=sharing)
 
 ---
 
