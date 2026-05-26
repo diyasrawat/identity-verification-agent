@@ -1,6 +1,8 @@
 import { useState } from "react";
 import VerdictBanner from "./VerdictBanner";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const ROW_BG    = { pass: "border-l-2 border-green-600", soft_fail: "border-l-2 border-yellow-500", hard_fail: "border-l-2 border-red-500" };
 const BADGE     = { pass: "bg-green-900 text-green-400", soft_fail: "bg-yellow-900 text-yellow-400", hard_fail: "bg-red-900 text-red-400" };
 const BADGE_LABEL = { pass: "Pass", soft_fail: "Soft Fail", hard_fail: "Hard Fail" };
@@ -54,7 +56,7 @@ export default function LiveTestPanel() {
     setLoading(true); setResult(null); setLastSaved(null);
     try {
       const sessionId = testCaseName ? `sess-${Date.now()}` : "";
-      const res = await fetch("/api/verify-live", {
+      const res = await fetch(`${API_BASE}/api/verify-live`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

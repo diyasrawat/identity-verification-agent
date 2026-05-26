@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const CATEGORIES = ["name_test", "dob_test", "gender_test", "pan_test", "judge_demo", "manual"];
 
 function StatCard({ label, value, sub, color = "indigo" }) {
@@ -47,10 +49,10 @@ export default function MemoryDashboard() {
     setLoading(true);
     try {
       const [statsRes, verRes, sesRes, patRes] = await Promise.all([
-        fetch("/api/memory/stats").then((r) => r.json()),
-        fetch("/api/history/verifications?limit=20").then((r) => r.json()),
-        fetch("/api/history/test-sessions?limit=50").then((r) => r.json()),
-        fetch("/api/history/patterns").then((r) => r.json()),
+        fetch(`${API_BASE}/api/memory/stats`).then((r) => r.json()),
+        fetch(`${API_BASE}/api/history/verifications?limit=20`).then((r) => r.json()),
+        fetch(`${API_BASE}/api/history/test-sessions?limit=50`).then((r) => r.json()),
+        fetch(`${API_BASE}/api/history/patterns`).then((r) => r.json()),
       ]);
       setStats(statsRes);
       setVerifications(verRes.verifications ?? []);
@@ -68,7 +70,7 @@ export default function MemoryDashboard() {
   async function handleReset(key) {
     if (!window.confirm(`Reset "${key}"? This cannot be undone.`)) return;
     setResetting(key);
-    await fetch("/api/memory/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }) });
+    await fetch(`${API_BASE}/api/memory/reset`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key }) });
     setResetting(null);
     load();
   }

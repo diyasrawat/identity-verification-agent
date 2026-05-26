@@ -13,6 +13,8 @@ import SelfImprovingAgent from "./components/SelfImprovingAgent";
 import HealingPanel from "./components/HealingPanel";
 import MemoryDashboard from "./components/MemoryDashboard";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const FILES = [
   { id: "FL-001", label: "FL-001 — Clean",         file: "/mock_files/file1_clean.json" },
   { id: "FL-002", label: "FL-002 — Soft Mismatch",  file: "/mock_files/file2_soft.json"  },
@@ -50,7 +52,7 @@ export default function App() {
   useEffect(() => {
     const poll = async () => {
       try {
-        const res  = await fetch("/api/self-improve/stats");
+        const res  = await fetch(`${API_BASE}/api/self-improve/stats`);
         const data = await res.json();
         setPendingProposals(data.pending_proposals ?? 0);
       } catch {}
@@ -63,7 +65,7 @@ export default function App() {
   useEffect(() => {
     const pollHealing = async () => {
       try {
-        const res  = await fetch("/api/healing/log");
+        const res  = await fetch(`${API_BASE}/api/healing/log`);
         const data = await res.json();
         setHealedErrors(data.total_healed ?? 0);
       } catch {}
@@ -83,7 +85,7 @@ export default function App() {
       const fileRes = await fetch(fileConfig.file);
       const data    = await fileRes.json();
       setProfile(data);
-      const res        = await fetch("/api/orchestrate", {
+      const res        = await fetch(`${API_BASE}/api/orchestrate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -100,7 +102,7 @@ export default function App() {
     setJudgeRunning(true);
     setJudgeToast(null);
     try {
-      const res  = await fetch("/api/test/run-all-judge-cases", { method: "POST" });
+      const res  = await fetch(`${API_BASE}/api/test/run-all-judge-cases`, { method: "POST" });
       const data = await res.json();
       setJudgeToast({
         type: data.accuracy === 100 ? "success" : "warn",
@@ -335,7 +337,7 @@ export default function App() {
                 if (!metrics && !metricsLoading) {
                   setMetricsLoading(true);
                   try {
-                    const res = await fetch("/api/evaluation/metrics");
+                    const res = await fetch(`${API_BASE}/api/evaluation/metrics`);
                     setMetrics(await res.json());
                   } finally {
                     setMetricsLoading(false);

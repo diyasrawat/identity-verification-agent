@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const VERDICT_COLORS = {
   PROCEED: "bg-green-900 text-green-400",
   REVIEW:  "bg-yellow-900 text-yellow-400",
@@ -12,7 +14,7 @@ export default function AuditTrail() {
 
   const fetchAudit = async () => {
     try {
-      const res = await fetch("/api/audit");
+      const res = await fetch(`${API_BASE}/api/audit`);
       const data = await res.json();
       setEntries((data.entries || []).slice().reverse());
     } catch {}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 const SEVERITY_STYLES = {
   CRITICAL: "bg-red-900 text-red-300",
   HIGH:     "bg-orange-900 text-orange-300",
@@ -13,7 +15,7 @@ export default function HealingPanel() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/healing/log");
+        const res = await fetch(`${API_BASE}/api/healing/log`);
         setData(await res.json());
       } catch {}
     };
