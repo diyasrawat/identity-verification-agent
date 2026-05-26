@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function AskAIDrawer({ check, profile, onClose }) {
   const [explanation, setExplanation] = useState(null);
@@ -10,7 +9,7 @@ export default function AskAIDrawer({ check, profile, onClose }) {
     setLoading(true);
     setExplanation(null);
     try {
-      const res = await fetch(`${API_BASE}/api/explain`, {
+      const res = await fetch(`https://flexiloans-backend.onrender.com/api/explain`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ check, full_profile: profile }),

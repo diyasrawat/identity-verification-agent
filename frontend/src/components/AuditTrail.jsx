@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
 
 const VERDICT_COLORS = {
   PROCEED: "bg-green-900 text-green-400",
@@ -14,7 +13,7 @@ export default function AuditTrail() {
 
   const fetchAudit = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/audit`);
+      const res = await fetch(`https://flexiloans-backend.onrender.com/api/audit`);
       const data = await res.json();
       setEntries((data.entries || []).slice().reverse());
     } catch {}
