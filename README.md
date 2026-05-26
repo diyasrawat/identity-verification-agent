@@ -3,8 +3,10 @@
 > **FlexiLoans Hackathon — Underwriting Intelligence Platform**  
 > An agentic AI system that cross-verifies Indian identity documents (PAN, Aadhaar, Bureau) for loan underwriting, using a 7-agent pipeline, multi-layer fuzzy matching, self-healing, and self-improving capabilities.
 
-<img width="1919" height="921" alt="image" src="https://github.com/user-attachments/assets/f48d1890-c6b4-42c6-8bfb-ed0168a743ec" />
-<img width="1914" height="938" alt="image" src="https://github.com/user-attachments/assets/a6e9cbc7-b413-4e0d-9842-80072df34fa5" />
+<img width="1919" height="921" alt="image" src="https://github.com/user-attachments/assets/c10f3c92-6f53-4fd9-be05-8817738ce3c3" />
+<img width="1879" height="911" alt="image" src="https://github.com/user-attachments/assets/2071d94c-daec-4e33-8fde-45f78acaa688" />
+<img width="1909" height="894" alt="image" src="https://github.com/user-attachments/assets/459f6938-d50c-4cb6-9aba-8be86dc54141" />
+
 
 **DEMO VIDEO:** [https://drive.google.com/file/d/1ZfmXZlZgxqqYi-0prhApykUZYuLplzM1/view?usp=drive_link](https://drive.google.com/file/d/1ZfmXZlZgxqqYi-0prhApykUZYuLplzM1/view?usp=drive_link)
 
