@@ -551,6 +551,18 @@ All memory survives server restarts:
 
 ---
 
+## Future Improvements
+
+| USP Area | Current State | Next 3 Months | Production Vision |
+|----------|--------------|---------------|-------------------|
+| **Graph-Aware Fuzzy Matching** | In-memory rule graph modifies thresholds per check | A/B test two graph configs on live traffic | Self-expanding graph - new nodes added automatically from approved proposals |
+| **Self-Improving Agent** | Proposes rule updates after 3 occurrences, human approves | Reinforcement Learning - every underwriter override becomes reward signal, auto-tunes thresholds | Zero-touch rules — agent learns optimal thresholds per lender, region, loan type with no manual intervention |
+| **Self-Healing Agent** | Catches errors, LLM analyzes root cause, proposes fix manually applied | Predictive healing - detects degrading accuracy trends before failures happen & Cross-agent healing — one agent detects another agent degrading | Full system self-repair with zero downtime |
+| **Address Resolution** | 5 document sources, recency trust scoring, pincode anchor | OCR integration - upload physical Aadhaar/PAN image, agent extracts address automatically | Google Maps API validation - confirm canonical address is real and deliverable |
+| **Hybrid Architecture** | <100ms deterministic, $0.001/file, SQLite audit | Redis cache for known patterns → <10ms repeat files | PostgreSQL + real-time streaming, RBI-compliant audit export, role-based access |
+| **Overall System** | Single lender deployment, in-memory rules | Pydantic models, webhook alerts (Slack/email on HARD BLOCK) | Multi-tenant SaaS - each lender gets isolated rule graph, self-improving memory, compliance dashboard |
+
+
 ## Documentation
 
 - [docs/architecture/system_architecture.md](docs/architecture/system_architecture.md)
