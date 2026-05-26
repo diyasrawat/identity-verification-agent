@@ -32,7 +32,7 @@ def create_error_signature(error: Exception, context: dict) -> str:
 def analyze_error_with_llm(error: Exception, failed_check: str, input_data: dict) -> dict:
     error_trace = traceback.format_exc()
     response = client.chat.completions.create(
-        model="anthropic/claude-haiku-4-5",
+        model="openai/gpt-oss-120b:free",
         max_tokens=400,
         messages=[
             {"role": "system", "content": "You are a self-healing agent for an identity verification system. Analyze errors and propose specific fixes. Be concise and technical."},

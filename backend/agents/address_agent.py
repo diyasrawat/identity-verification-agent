@@ -205,7 +205,7 @@ def run_address_agent(addresses: dict, profile: dict, doc_dates: dict = None) ->
             for c in conflicts
         )
         response = client.chat.completions.create(
-            model="anthropic/claude-haiku-4-5",
+            model="openai/gpt-oss-120b:free",
             max_tokens=200,
             messages=[
                 {

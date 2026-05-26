@@ -86,7 +86,7 @@ def analyze_and_propose(pattern_memory: dict) -> list:
 
 async def generate_rule_code_for_proposal(proposal: dict) -> str:
     response = client.chat.completions.create(
-        model="anthropic/claude-haiku-4-5",
+        model="openai/gpt-oss-120b:free",
         max_tokens=600,
         messages=[
             {"role": "system", "content": "You are a code generation agent for an identity verification system. Generate only raw Python code, no markdown."},

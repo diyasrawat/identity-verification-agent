@@ -43,7 +43,7 @@ def run_verdict_agent(
     )
 
     response = client.chat.completions.create(
-        model="anthropic/claude-haiku-4-5",
+        model="openai/gpt-oss-120b:free",
         max_tokens=300,
         messages=[
             {

@@ -15,7 +15,7 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=_api_key,
 )
-MODEL = "anthropic/claude-haiku-4-5"
+MODEL = "openai/gpt-oss-120b:free"
 
 
 def explain_soft_fail(check_name, input_a, input_b):
