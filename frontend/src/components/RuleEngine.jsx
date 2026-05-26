@@ -10,22 +10,20 @@ const EXAMPLE_RULES = [
 ];
 
 export default function RuleEngine() {
-  const [ruleText, setRuleText] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [generated, setGenerated] = useState(null); // { func_name, generated_code, rule_description }
-  const [saving, setSaving] = useState(false);
+  const [ruleText,    setRuleText]    = useState("");
+  const [generating,  setGenerating]  = useState(false);
+  const [generated,   setGenerated]   = useState(null);
+  const [saving,      setSaving]      = useState(false);
   const [activeRules, setActiveRules] = useState([]);
 
-  useEffect(() => {
-    fetchRules();
-  }, []);
+  useEffect(() => { fetchRules(); }, []);
 
   async function fetchRules() {
     try {
-      const res = await fetch("/api/rules/list");
+      const res  = await fetch("/api/rules/list");
       const data = await res.json();
       setActiveRules(data.rules ?? []);
-    } catch (_) {}
+    } catch {}
   }
 
   async function handleGenerate() {
@@ -33,13 +31,12 @@ export default function RuleEngine() {
     setGenerating(true);
     setGenerated(null);
     try {
-      const res = await fetch("/api/rules/create", {
+      const res  = await fetch("/api/rules/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rule_description: ruleText.trim() }),
       });
-      const data = await res.json();
-      setGenerated(data);
+      setGenerated(await res.json());
     } catch (err) {
       console.error("Rule generation failed:", err);
     } finally {
@@ -76,32 +73,29 @@ export default function RuleEngine() {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 space-y-6">
-      {/* Header */}
+    <div className="rounded-xl border border-gray-800 bg-gray-900 shadow-sm p-6 space-y-6">
       <div>
-        <h2 className="text-base font-bold text-gray-800">⚙️ Rule Engine</h2>
+        <h2 className="text-base font-bold text-gray-100">Rule Engine</h2>
         <p className="text-xs text-gray-500 mt-0.5">
           Write a rule in plain English — the agent converts it to a live verification check
         </p>
       </div>
 
-      {/* SECTION A — Rule Input */}
       <div className="space-y-3">
         <textarea
           rows={4}
           value={ruleText}
           onChange={(e) => setRuleText(e.target.value)}
           placeholder="e.g. PAN number last 4 characters before the final letter must be numeric digits only"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+          className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
         />
 
-        {/* Example chips */}
         <div className="flex flex-wrap gap-2">
           {EXAMPLE_RULES.map((ex) => (
             <button
               key={ex}
               onClick={() => setRuleText(ex)}
-              className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-100 transition-colors"
+              className="rounded-full border border-indigo-800 bg-indigo-950 px-3 py-1 text-xs text-indigo-300 hover:bg-indigo-900 transition-colors"
             >
               {ex}
             </button>
@@ -111,73 +105,57 @@ export default function RuleEngine() {
         <button
           onClick={handleGenerate}
           disabled={generating || !ruleText.trim()}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+          className="w-full rounded-lg bg-indigo-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60 transition-colors"
         >
-          {generating ? "🤖 Agent is writing your rule…" : "Generate Rule"}
+          {generating ? "Agent is writing your rule..." : "Generate Rule"}
         </button>
       </div>
 
-      {/* SECTION B — Generated Code Preview */}
       {generated && (
-        <div className="space-y-3 border-t border-gray-100 pt-5">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-gray-600">
-              Rule:{" "}
-              <span className="font-mono text-indigo-700">{generated.func_name}</span>
-            </p>
-          </div>
-
-          <pre className="overflow-auto max-h-52 rounded-lg bg-gray-900 p-4 text-xs text-green-300 font-mono leading-relaxed">
+        <div className="space-y-3 border-t border-gray-800 pt-5">
+          <p className="text-xs font-semibold text-gray-400">
+            Rule: <span className="font-mono text-indigo-400">{generated.func_name}</span>
+          </p>
+          <pre className="overflow-auto max-h-52 rounded-lg bg-gray-950 border border-gray-800 p-4 text-xs text-green-400 font-mono leading-relaxed">
             {generated.generated_code}
           </pre>
-
           <div className="flex gap-3">
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60 transition-colors"
+              className="flex-1 rounded-lg bg-green-700 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600 disabled:opacity-60 transition-colors"
             >
-              {saving ? "Adding…" : "✅ Add to Engine"}
+              {saving ? "Adding..." : "Add to Engine"}
             </button>
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300 disabled:opacity-60 transition-colors"
+              className="flex-1 rounded-lg bg-gray-700 px-4 py-2 text-sm font-semibold text-gray-200 hover:bg-gray-600 disabled:opacity-60 transition-colors"
             >
-              🔄 Regenerate
+              Regenerate
             </button>
           </div>
         </div>
       )}
 
-      {/* SECTION C — Active Rules */}
-      <div className="border-t border-gray-100 pt-5 space-y-3">
-        <p className="text-sm font-bold text-gray-700">
-          Active Custom Rules ({activeRules.length})
-        </p>
+      <div className="border-t border-gray-800 pt-5 space-y-3">
+        <p className="text-sm font-bold text-gray-200">Active Custom Rules ({activeRules.length})</p>
 
         {activeRules.length === 0 && (
-          <p className="text-xs text-gray-400">
-            No custom rules yet. Generate and add one above.
-          </p>
+          <p className="text-xs text-gray-500">No custom rules yet. Generate and add one above.</p>
         )}
 
         {activeRules.map((rule) => (
-          <div
-            key={rule.func_name}
-            className="flex items-start justify-between rounded-lg border border-purple-100 bg-purple-50 px-4 py-3"
-          >
+          <div key={rule.func_name} className="flex items-start justify-between rounded-lg border border-violet-900 bg-violet-950 px-4 py-3">
             <div className="space-y-0.5">
-              <p className="text-sm text-gray-800">{rule.rule_description}</p>
-              <p className="font-mono text-xs text-gray-400">{rule.func_name}</p>
+              <p className="text-sm text-gray-200">{rule.rule_description}</p>
+              <p className="font-mono text-xs text-gray-500">{rule.func_name}</p>
             </div>
             <div className="flex items-center gap-2 ml-4 shrink-0">
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
-                ACTIVE
-              </span>
+              <span className="rounded-full bg-green-900 px-2 py-0.5 text-xs font-bold text-green-400">ACTIVE</span>
               <button
                 onClick={() => handleDelete(rule.func_name)}
-                className="rounded bg-red-100 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-200 transition-colors"
+                className="rounded bg-red-900 px-2 py-1 text-xs font-semibold text-red-300 hover:bg-red-800 transition-colors"
               >
                 Remove
               </button>
@@ -186,10 +164,9 @@ export default function RuleEngine() {
         ))}
 
         {activeRules.length > 0 && (
-          <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs text-green-800">
+          <div className="rounded-lg border border-green-900 bg-green-950 px-4 py-3 text-xs text-green-300">
             These {activeRules.length} custom rule{activeRules.length > 1 ? "s are" : " is"} now
-            running on every verification — including the 3 mock files above and the Live
-            Tester below.
+            running on every verification.
           </div>
         )}
       </div>
